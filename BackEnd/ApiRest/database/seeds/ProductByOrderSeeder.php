@@ -20,7 +20,7 @@ class ProductByOrderSeeder extends Seeder
                 $number = $fake->numberBetween(1,6);
                 $list->add($number);
                 if(!$list->contains($number)){
-                    DB::table('products_by_orders')->insert([
+                    DB::table('product_by_orders')->insert([
                         'order_id' => $i,
                         'product_id' => $number,
                         'amount' => $fake->numberBetween(1,9),

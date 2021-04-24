@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductByOrder as ModelsProductByOrder;
 use App\ProductByOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProductByOrderController extends Controller
 {
@@ -17,15 +19,6 @@ class ProductByOrderController extends Controller
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -35,7 +28,11 @@ class ProductByOrderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(),$this->rules());
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+        ModelsProductByOrder::create($request->only(['order_id', 'product_id', 'amount']));
     }
 
     /**
@@ -81,5 +78,19 @@ class ProductByOrderController extends Controller
     public function destroy(ProductByOrder $productByOrder)
     {
         //
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'order_id' => 'required|numeric|exists:orders,id',
+            'product_id' => 'required|numeric|exists:products,id',
+            'amount' => 'required|numeric'
+        ];
     }
 }

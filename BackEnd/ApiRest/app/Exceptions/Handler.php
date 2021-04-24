@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -50,6 +52,33 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if($exception instanceof QueryException){
+            return $this->queryExceptionResponse($exception);
+        } else if($exception instanceof ModelNotFoundException){
+            return $this->modelNotFoundExceptionResponse($exception);
+        }
         return parent::render($request, $exception);
+    }
+
+    public function queryExceptionResponse(QueryException $exception){
+        if($exception->getCode() == 23000){
+            return response()->json([
+                'SQLSTATE' => $exception->getCode(),
+                'message' => 'the resource is currently being used.',
+                'DBMessage' => $exception->getMessage()
+            ], 500);
+        }
+        return response()->json([
+            'SQLSTATE' => $exception->getCode(),
+            'message' => 'DataBase Error.',
+            'DBMessage' => $exception->getMessage()
+        ], 500);
+    }
+
+    public function modelNotFoundExceptionResponse(ModelNotFoundException $exception){
+        return response()->json([
+            'message' => 'Resource not found.',
+            'infoMessage' => $exception->getMessage()
+        ], 404);
     }
 }

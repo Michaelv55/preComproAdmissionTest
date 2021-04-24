@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Client;
 use App\Models\Client as ModelsClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ClientController extends Controller
 {
@@ -15,17 +15,7 @@ class ClientController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return ModelsClient::all();
     }
 
     /**
@@ -36,7 +26,13 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(),$this->rules());
+
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+
+        return ModelsClient::create($request->all());
     }
 
     /**
@@ -45,20 +41,9 @@ class ClientController extends Controller
      * @param  \App\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function show(Client $client)
+    public function show(ModelsClient $client)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Client  $client
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Client $client)
-    {
-        //
+        return $client;
     }
 
     /**
@@ -68,9 +53,15 @@ class ClientController extends Controller
      * @param  \App\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Client $client)
+    public function update(Request $request, ModelsClient $client)
     {
-        //
+        $validator = Validator::make($request->all(),$this->rules());
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+        $client->update($request->all());
+        return $client;
+        
     }
 
     /**
@@ -79,8 +70,32 @@ class ClientController extends Controller
      * @param  \App\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Client $client)
+    public function destroy(ModelsClient $client)
     {
-        //
+        if(!$client->delete()){
+            return response()->json([
+                'success' => false,
+                'message' => 'Record could not be deleted.'
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Record deleted.'
+        ]);
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'name' => 'string|max:80',
+            'email' => 'unique:clients|email',
+            'phone' => 'numeric'
+        ];
     }
 }

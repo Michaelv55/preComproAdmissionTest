@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Seller;
+use App\Models\Seller as ModelsSeller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class SellerController extends Controller
 {
@@ -14,17 +15,7 @@ class SellerController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return ModelsSeller::all();
     }
 
     /**
@@ -35,7 +26,13 @@ class SellerController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(),$this->rules());
+
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+
+        return ModelsSeller::create($request->all());
     }
 
     /**
@@ -44,20 +41,9 @@ class SellerController extends Controller
      * @param  \App\Seller  $seller
      * @return \Illuminate\Http\Response
      */
-    public function show(Seller $seller)
+    public function show(ModelsSeller $seller)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Seller  $seller
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Seller $seller)
-    {
-        //
+        return $seller;
     }
 
     /**
@@ -67,9 +53,14 @@ class SellerController extends Controller
      * @param  \App\Seller  $seller
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Seller $seller)
+    public function update(Request $request, ModelsSeller $seller)
     {
-        //
+        $validator = Validator::make($request->all(),$this->rules());
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+        $seller->update($request->all());
+        return $seller;
     }
 
     /**
@@ -78,8 +69,32 @@ class SellerController extends Controller
      * @param  \App\Seller  $seller
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Seller $seller)
+    public function destroy(ModelsSeller $seller)
     {
-        //
+        if(!$seller->delete()){
+            return response()->json([
+                'success' => false,
+                'message' => 'Record could not be deleted.'
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Record deleted.'
+        ]);
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'name' => 'max:80',
+            'email' => 'unique:clients|email',
+            'phone' => 'numeric'
+        ];
     }
 }

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Product;
+use App\Models\Product as ModelsProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -14,17 +15,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return ModelsProduct::all();
     }
 
     /**
@@ -35,7 +26,15 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->offsetSet('status_id', $request->offsetGet('status_id') ?: 2);
+
+        $validator = Validator::make($request->all(),$this->rules());
+
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+
+        return ModelsProduct::create($request->all());
     }
 
     /**
@@ -44,20 +43,9 @@ class ProductController extends Controller
      * @param  \App\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function show(Product $product)
+    public function show(ModelsProduct $product)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Product  $product
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Product $product)
-    {
-        //
+        return $product;
     }
 
     /**
@@ -67,9 +55,15 @@ class ProductController extends Controller
      * @param  \App\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, ModelsProduct $product)
     {
-        //
+        $validator = Validator::make($request->all(),$this->rules());
+
+        if($validator->fails()){
+            return response()->json($validator->errors(), 412);
+        }
+        $product->update($request->all());
+        return $product;
     }
 
     /**
@@ -78,8 +72,33 @@ class ProductController extends Controller
      * @param  \App\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Product $product)
+    public function destroy(ModelsProduct $product)
     {
-        //
+        if(!$product->delete()){
+            return response()->json([
+                'success' => false,
+                'message' => 'Record could not be deleted.'
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Record deleted.'
+        ]);
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'name' => 'required|max:80',
+            'description' => 'required|max:180',
+            'value' => 'required|numeric',
+            'status_id' => 'numeric|exists:product_statuses,id'
+        ];
     }
 }
